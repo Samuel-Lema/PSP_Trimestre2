@@ -80,7 +80,7 @@ public class Usuario extends Thread {
         
         String nombreSala;
         
-        if (nombreS.equals(null)) {
+        if (nombreS == null) {
             
             nombreSala = recibirMensaje();
         } else {
@@ -112,6 +112,10 @@ public class Usuario extends Thread {
             System.out.println("El usuario ( " + userName + " ) esta a la espera en la sala ( " + sala.getNombre() + " ).");
             enviarMensaje("La Sala a la que te intentas unir esta llena, intentalo de nuevo más tarde.");
             
+            // Lo elimina de la Sala
+            sala.removeUser(this);
+            sala = null;
+        
             try {
 
                 sleep(10000);

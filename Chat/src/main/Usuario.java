@@ -38,14 +38,6 @@ public class Usuario extends Thread {
         userName = recibirMensaje();
         
         changeSala(null);
-        
-        // Envia un mensaje Global del Servidor en el que muestra datos del nuevo Usuario conectado
-        // Le paso (El usuario mismo || el mensaje || si quiero que se envie modificado a este usuario en especifico)
-        sala.GlobalMensaje(this, "Nuevo usuario conectado ( " + userName + " / " + socket.getInetAddress().getHostAddress() + " / " + socket.getPort() + " )", true);
-
-        // Envia un mensaje Global del Servidor en el que muestra los Usuarios conectados actualmente
-        // Le paso (El usuario mismo || el mensaje || si quiero que se envie modificado a este usuario en especifico)
-        sala.GlobalMensaje(this, "Actualmente hay ( " + sala.getUsuarios().size() + " ) Usuarios conectados", false);
 
         // Entra en un bucle de comunicación con el cliente hasta que se cierre la conexión
         boolean closeClient = false;
@@ -94,18 +86,18 @@ public class Usuario extends Thread {
         
         String nombreSala;
         
-        if (nombreS == null) {
+        if (nombreS == null) { // Si no me pasa un nombre de sala predefinido se lo pregunto
             
             nombreSala = recibirMensaje();
-        } else {
+        } else {  // Si me pasa un nombre de sala predefinido lo gestiono y lo elimino de la sala anterior en caso de que tuviese una asignada
             
             nombreSala = nombreS;
             sala.userOption(this, 1);
         }
         
-        for (Sala x: Sala.getSalas()) {
+        for (Sala x: Sala.getSalas()) { // Recorre las salas para comprobar si existe o no la sala que me envia
             
-            if (x.getNombre().equals(nombreSala)) {
+            if (x.getNombre().equals(nombreSala)) { // Si la encuentra la sala, se la asigno
                 
                 salaEncontrada = true;
                 sala = x;
@@ -114,7 +106,7 @@ public class Usuario extends Thread {
             }
         }
         
-        if (salaEncontrada == false) {
+        if (salaEncontrada == false) { // Si no encuentra la sala, la genero
             
             sala = new Sala(nombreSala);
             sala.userOption(this, 0);
@@ -139,6 +131,15 @@ public class Usuario extends Thread {
             run();
         }
         
+        // Envia un mensaje Global del Servidor en el que muestra datos del nuevo Usuario conectado
+        // Le paso (El usuario mismo || el mensaje || si quiero que se envie modificado a este usuario en especifico)
+        sala.GlobalMensaje(this, "Nuevo usuario conectado ( " + userName + " / " + socket.getInetAddress().getHostAddress() + " / " + socket.getPort() + " )", true);
+
+        // Envia un mensaje Global del Servidor en el que muestra los Usuarios conectados actualmente
+        // Le paso (El usuario mismo || el mensaje || si quiero que se envie modificado a este usuario en especifico)
+        sala.GlobalMensaje(this, "Actualmente hay ( " + sala.getUsuarios().size() + " ) Usuarios conectados a ( " + sala.getNombre() + " )", false);
+        
+        // Le envio los nombres de usuarios de la sala al cliente para que el los gestione a su parecer
         String nombresUsuario = "USUARIOS";
                 
         for (Usuario nombre: sala.getUsuarios()) {

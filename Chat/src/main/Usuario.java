@@ -40,53 +40,52 @@ public class Usuario extends Thread {
         changeSala(null);
         
         // Envia un mensaje Global del Servidor en el que muestra datos del nuevo Usuario conectado
+        // Le paso (El usuario mismo || el mensaje || si quiero que se envie modificado a este usuario en especifico)
         sala.GlobalMensaje(this, "Nuevo usuario conectado ( " + userName + " / " + socket.getInetAddress().getHostAddress() + " / " + socket.getPort() + " )", true);
 
         // Envia un mensaje Global del Servidor en el que muestra los Usuarios conectados actualmente
+        // Le paso (El usuario mismo || el mensaje || si quiero que se envie modificado a este usuario en especifico)
         sala.GlobalMensaje(this, "Actualmente hay ( " + sala.getUsuarios().size() + " ) Usuarios conectados", false);
 
         // Entra en un bucle de comunicación con el cliente hasta que se cierre la conexión
         boolean closeClient = false;
         
         do {
+            // Llamo a la funcion 'recibirMensaje()' que me devuelve un mensaje enviado por este cliente y lo guardo
             String mensaje = recibirMensaje();
                     
+            // Si se ha cerrado la conexión que salga del bucle de comunicación
             if (socket.isClosed() == true) {
                 
                  break;
             }
             
-            // Gestiona si recibe un /bye el cual debera cerrar la comunicación con el cliente
-            if (mensaje.equals("/bye")) {
+            if (mensaje.equals("/bye")) { // Si recibe un /bye el cual debera cerrar la comunicación con el cliente
 
-                // La variable closeClient cambia a 'TRUE' para salir del bucle de comunicación con este cliente
                 closeClient = closeConnect();
 
-            } else if(mensaje.contains("/sala")){
+            } else if(mensaje.contains("/sala")){ // Si recibe un /sala 'Nombre Sala' cambiara a la Sala con ese nuevo nombre
             
                 changeSala(mensaje.split("/sala ")[1]);
-                
-            } else if(mensaje.contains("/info")){
+                 
+            } else if(mensaje.contains("/info")){ // Si recibe un /info se le pasa al cliente info de todas las salas
             
-                String nombresSalas = "";
+                String nombresSalas = "SALAS";
                 
                 for (Sala s: Sala.getSalas()) {
                     
-                    nombresSalas += " | " + sala.getNombre();
+                    nombresSalas += " | " + s.getNombre();
                 }
                 
                 enviarMensaje(nombresSalas);
                 
-            } else {
-
-                // Si el mensaje recibido no es /bye muestra el mensaje en la Sala
+            } else { // Si el mensaje recibido ningun comando definido muestra el mensaje en la Sala
+                
                 sala.añadirMensaje(this, mensaje);
             }
 
         } while (closeClient == false);
     }
-
-    // Permite unirse a una Sala
     
     public void changeSala(String nombreS){
         
@@ -101,8 +100,8 @@ public class Usuario extends Thread {
         } else {
             
             nombreSala = nombreS;
+            sala.userOption(this, 1);
         }
-        
         
         for (Sala x: Sala.getSalas()) {
             
@@ -110,7 +109,7 @@ public class Usuario extends Thread {
                 
                 salaEncontrada = true;
                 sala = x;
-                sala.addUser(this);
+                sala.userOption(this, 0);
                 break;
             }
         }
@@ -118,7 +117,7 @@ public class Usuario extends Thread {
         if (salaEncontrada == false) {
             
             sala = new Sala(nombreSala);
-            sala.addUser(this);
+            sala.userOption(this, 0);
         }
         
         // Gestiona que no se conecten más de 10 usuarios simultaneamente
@@ -128,7 +127,7 @@ public class Usuario extends Thread {
             enviarMensaje("La Sala a la que te intentas unir esta llena, intentalo de nuevo más tarde.");
             
             // Lo elimina de la Sala
-            sala.removeUser(this);
+            sala.userOption(this, 1);
             sala = null;
         
             try {
@@ -139,6 +138,15 @@ public class Usuario extends Thread {
             // Llama al "Run" del Thread recursivamente hasta que un usuario se desconecte y este pueda conectarse
             run();
         }
+        
+        String nombresUsuario = "USUARIOS";
+                
+        for (Usuario nombre: sala.getUsuarios()) {
+                    
+            nombresUsuario += " | " + nombre.getUserName();
+        }
+                
+        enviarMensaje(nombresUsuario);
     }
     
     // Cierro la conexión con el cliente
@@ -154,7 +162,7 @@ public class Usuario extends Thread {
         }
             
         // Lo elimina de la Sala
-        sala.removeUser(this);
+        sala.userOption(this, 1);
         sala = null;
         
         // Cierra el Socket del Cliente
@@ -187,8 +195,6 @@ public class Usuario extends Thread {
         escribirByte = new DataOutputStream(os);
          
         try {
-            
-
             // Envia el mensaje al Cliente
             escribirByte.writeInt(msg.getBytes().length);
             escribirByte.write(msg.getBytes());

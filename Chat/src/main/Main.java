@@ -31,6 +31,7 @@ public class Main {
             // Genero Interfaz
             new Administracion();
             
+            // Escucho nuevas peticiones de conexión y genero un Objeto usuario por cada conexión
             do {
                 socketUsuario = serverSocket.accept();
                 new Usuario(socketUsuario);

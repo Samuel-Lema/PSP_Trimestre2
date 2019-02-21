@@ -10,49 +10,56 @@ import javax.swing.JTextArea;
 
 public class Sala extends Thread {
 
-    // Lista de usuarios conectados actualmente en la Sala
-    private static ArrayList<Sala> salas = new ArrayList<>();
-    private String nombre;
+    private static ArrayList<Sala> salas = new ArrayList<>(); // Lista de usuarios conectados actualmente en la Sala
+    private String nombre; // Nombre de la Sala
 
-    // Lista de usuarios conectados actualmente en la Sala
-    private ArrayList<Usuario> usuarios = new ArrayList<>();
+    private ArrayList<Usuario> usuarios = new ArrayList<>(); // Lista de usuarios conectados actualmente en la Sala
 
     // Variables de la Interfaz
-    JTextArea txtSala = new JTextArea();
-    JList lista = new JList();
-    JPanel panel = new JPanel();
-
     DefaultListModel<String> model = new DefaultListModel<>();
+    JTextArea chatSala = new JTextArea();
+    JList listaUsuarios = new JList();
+    JPanel panel = new JPanel();
+    
 
     public Sala(String nombre) {
 
+        // Asigno el nombre a la Sala y se autoañade a un Array Global con todas las Salas activas
         this.nombre = nombre;
         salas.add(this);
 
-        txtSala.setBounds(0, 0, 600, 360);
-        panel.add(txtSala);
-        lista.setBounds(600, 0, 200, 360);
-        lista.setBackground(Color.lightGray);
-        panel.add(lista);
+        // Genero la Sala de Chat y lista de Usuarios de la Sala en la (INTERFAZ)
+        chatSala.setBounds(0, 0, 600, 360);
+        panel.add(chatSala);
+        listaUsuarios.setBounds(600, 0, 200, 360);
+        listaUsuarios.setBackground(Color.lightGray);
+        panel.add(listaUsuarios);
 
         panel.setLayout(null);
         Administracion.jTab.add(nombre, panel);
 
-        // Cierra la conexión con el cliente seleccionado
+        // Cierra la conexión con el cliente seleccionado en la lista de Usuarios de la Sala
         Administracion.btnDrop.addActionListener((ActionEvent ae) -> {
 
-            if (lista.getSelectedIndex() != -1) {
+            if (listaUsuarios.getSelectedIndex() != -1) {
 
-                GlobalMensaje(null, " ### Se ha echado a " + usuarios.get(lista.getSelectedIndex()).getUserName() + " del Servidor ###", false);
-                usuarios.get(lista.getSelectedIndex()).closeConnect();
+                // Muestro a todos los usuarios que se ha echado a X usuario
+                GlobalMensaje(null, " ### Se ha echado a " + usuarios.get(listaUsuarios.getSelectedIndex()).getUserName() + " del Servidor ###", false);
+                // Cierro la conexión con ese usuario
+                usuarios.get(listaUsuarios.getSelectedIndex()).closeConnect();
             }
         });
     }
+    
+    synchronized public void userOption(Usuario user, int opciones) {
 
-    synchronized public void addUser(Usuario user) {
-
-        usuarios.add(user);
-
+        switch(opciones){
+            case 0: usuarios.add(user); break; // Añado al usuario a la sala
+            case 1: usuarios.remove(user); break; // Elimino al usuario de la sala
+            default: break;
+        }
+        
+        // Refresco la lista de usuario de la Sala
         model.clear();
 
         for (Usuario usuario : usuarios) {
@@ -60,40 +67,28 @@ public class Sala extends Thread {
             model.addElement(usuario.getUserName());
         }
 
-        lista.setModel(model);
-    }
-
-    synchronized public void removeUser(Usuario user) {
-
-        usuarios.remove(user);
-
-        model.clear();
-
-        for (Usuario usuario : usuarios) {
-
-            model.addElement(usuario.getUserName());
-        }
-
-        lista.setModel(model);
+        listaUsuarios.setModel(model);
     }
 
     synchronized public void añadirMensaje(Usuario user, String msg) {
 
-        txtSala.append(user.getUserName() + ": " + msg + "\n");
+        // Muestra el mensaje enviado por un usuario en la sala de chat
+        chatSala.append(user.getUserName() + ": " + msg + "\n");
 
-        // Recorre todos los usuarios de la sala para enviar los mensajes en la sala a cada uno
+        // Envia el mensaje recibido a todos los usuarios de la sala
         for (Usuario usuario : usuarios) {
 
-            // Envio el mensaje 'Nombre Usuario: Mensaje del Usuario'
+            // Envio el mensaje 'Nombre User: Mensaje del User'
             usuario.enviarMensaje(user.getUserName() + ": " + msg);
         }
     }
 
     synchronized public void GlobalMensaje(Usuario user, String msg, Boolean modificado) {
 
-        txtSala.append(msg + "\n");
+        // Muestra el mensaje gestionado por el servidor en la sala de chat
+        chatSala.append(msg + "\n");
 
-        // Recorre todos los usuarios de la sala para enviar los mensajes en la sala a cada uno
+        // Envia el mensaje a todos los usuarios de la sala
         for (Usuario usuario : usuarios) {
 
             if (modificado && usuario.equals(user)) {

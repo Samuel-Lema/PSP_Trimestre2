@@ -147,7 +147,7 @@ public class Usuario extends Thread {
             nombresUsuario += " | " + nombre.getUserName();
         }
                 
-        enviarMensaje(nombresUsuario);
+        sala.añadirMensaje(this, nombresUsuario);
     }
     
     // Cierro la conexión con el cliente

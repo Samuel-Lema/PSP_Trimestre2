@@ -1,5 +1,7 @@
 package main;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +14,8 @@ public class Usuario extends Thread {
     private String userName = "Unknown";
     private InputStream is;
     private OutputStream os;
+    DataInputStream tamañoByte;
+    DataOutputStream escribirByte;
     byte[] mensaje;
 
     public Usuario(Socket socket) {
@@ -61,6 +65,17 @@ public class Usuario extends Thread {
             } else if(mensaje.contains("/sala")){
             
                 changeSala(mensaje.split("/sala ")[1]);
+                
+            } else if(mensaje.contains("/info")){
+            
+                String nombresSalas = "";
+                
+                for (Sala s: Sala.getSalas()) {
+                    
+                    nombresSalas += " | " + sala.getNombre();
+                }
+                
+                enviarMensaje(nombresSalas);
                 
             } else {
 
@@ -118,7 +133,7 @@ public class Usuario extends Thread {
         
             try {
 
-                sleep(10000);
+                sleep(1000);
             } catch (InterruptedException ex) {}
 
             // Llama al "Run" del Thread recursivamente hasta que un usuario se desconecte y este pueda conectarse
@@ -155,9 +170,10 @@ public class Usuario extends Thread {
     // Recibe y devuelve los mensajes leidos
     public String recibirMensaje() {
 
-        mensaje = new byte[2000];
-
+        tamañoByte = new DataInputStream(is);
+        
         try {
+            mensaje = new byte[tamañoByte.readInt()];
             is.read(mensaje);
             
         } catch (IOException ex) {}
@@ -168,11 +184,14 @@ public class Usuario extends Thread {
     // Envia el mensaje al Usuario 
     public void enviarMensaje(String msg) {
 
+        escribirByte = new DataOutputStream(os);
+         
         try {
-            os.flush();
+            
 
             // Envia el mensaje al Cliente
-            os.write(msg.getBytes());
+            escribirByte.writeInt(msg.getBytes().length);
+            escribirByte.write(msg.getBytes());
 
         } catch (IOException ex) {}
     }

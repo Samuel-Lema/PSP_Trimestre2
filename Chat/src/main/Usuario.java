@@ -53,9 +53,10 @@ public class Usuario extends Thread {
             }
             
             if (mensaje.equals("/bye")) { // Si recibe un /bye el cual debera cerrar la comunicación con el cliente
-
+                
+                enviarUsuarios();
                 closeClient = closeConnect();
-
+                
             } else if(mensaje.contains("/sala")){ // Si recibe un /sala 'Nombre Sala' cambiara a la Sala con ese nuevo nombre
             
                 changeSala(mensaje.split("/sala ")[1]);
@@ -140,14 +141,7 @@ public class Usuario extends Thread {
         sala.GlobalMensaje(this, "Actualmente hay ( " + sala.getUsuarios().size() + " ) Usuarios conectados a ( " + sala.getNombre() + " )", false);
         
         // Le envio los nombres de usuarios de la sala al cliente para que el los gestione a su parecer
-        String nombresUsuario = "USUARIOS";
-                
-        for (Usuario nombre: sala.getUsuarios()) {
-                    
-            nombresUsuario += " | " + nombre.getUserName();
-        }
-                
-        sala.añadirMensaje(this, nombresUsuario);
+        enviarUsuarios();
     }
     
     // Cierro la conexión con el cliente
@@ -156,14 +150,15 @@ public class Usuario extends Thread {
         // Envia un mensaje Global del Servidor en el que muestra el Usuario que se ha desconectado
         sala.GlobalMensaje(this, this.userName + " ha dejado el Sala", false);
             
+        // Lo elimina de la Sala
+        sala.userOption(this, 1); 
+        
         // Si al desconectarse no hay más usuarios en la Sala, comunica que no hay nadie conectado
         if (sala.getUsuarios().isEmpty()) {
             
             sala.GlobalMensaje(this, "Ningún cliente conectado", false);
         }
-            
-        // Lo elimina de la Sala
-        sala.userOption(this, 1);
+        
         sala = null;
         
         // Cierra el Socket del Cliente
@@ -203,6 +198,19 @@ public class Usuario extends Thread {
         } catch (IOException ex) {}
     }
 
+    // Envio una lista de usuarios conectados en la Sala al cliente
+    public void enviarUsuarios(){
+        
+        String nombresUsuario = "USUARIOS";
+                
+        for (Usuario nombre: sala.getUsuarios()) {
+                    
+            nombresUsuario += " | " + nombre.getUserName();
+        }
+                
+        sala.añadirMensaje(this, nombresUsuario);
+    }
+    
     // Get's y Set's
     public Socket getSocket() {
         return socket;
